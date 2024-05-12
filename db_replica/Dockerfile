@@ -1,0 +1,5 @@
+FROM postgres:13
+
+ENV POSTGRES_USER=repl_user
+ENV POSTGRES_PASSWORD=1234
+ENV POSTGRES_DB=replication_db
