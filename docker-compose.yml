@@ -1,0 +1,14 @@
+version: "3.3"
+
+services:
+  bot:
+    image: 192.168.64.29:5000/bot_image:latest
+    volumes:
+      - /var/log/postgresql/postgresql-13-main.log:/var/log/postgresql/postgresql-13-main.log
+    depends_on:
+      - db_primary
+      - db_replica
+  db_primary:
+    image: 192.168.64.29:5000/db_image:latest
+  db_replica:
+    image: 192.168.64.29:5000/db_repl_image:latest

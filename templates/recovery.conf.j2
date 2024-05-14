@@ -1,0 +1,4 @@
+standby_mode = 'on'
+primary_conninfo = 'host={{ DB_HOST }} port={{ DB_PORT }} user={{ DB_REPL_USER }} password={{ DB_REPL_PASSWORD }}' 
+restore_command = 'cp /var/lib/postgresql/13/main/archive/%f "%p"'
+recovery_target_timeline = 'latest'

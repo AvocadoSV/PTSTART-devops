@@ -1,0 +1,2 @@
+192.168.64.29:5432:replication_db:repl_user:1234
+192.168.64.41:5432:replication_db:repl_user:1234

@@ -1,0 +1,196 @@
+---
+- hosts: database
+  become: true
+  tasks:
+    - name: Install PostgreSQL 
+      apt:
+        name: 
+          - postgresql 
+          - postgresql-contrib
+        state: present
+        update_cache: yes
+
+    - name: Configure postgresql.conf
+      template:
+        src: templates/postgresql.conf.j2
+        dest: /etc/postgresql/13/main/postgresql.conf
+      notify: restart postgresql
+
+
+    - name: Create archive directory for PostgreSQL
+      file:
+        path: /var/lib/postgresql/13/main/archive
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0755'
+
+    
+    - name: Configure pg_hba.conf
+      template:
+        src: pg_hba.conf
+        dest: /etc/postgresql/13/main/pg_hba.conf
+      notify: restart postgresql
+
+    - name: Install pip for Python 3
+      apt:
+        name: python3-pip
+        state: present
+      become: true
+
+    - name: Install psycopg2 Python library
+      pip:
+        name: psycopg2-binary
+        state: present
+
+#    - name: Ensure replication user exists
+#      postgresql_user:
+#        name: "{{ DB_REPL_USER }}"
+#        password: "{{ DB_REPL_PASSWORD }}"
+#        role_attr_flags: LOGIN,REPLICATION
+#        state: present
+#        db: replication_db
+#        host: "{{ DB_HOST }}"  # Добавлено
+#        port: "{{ DB_PORT }}"  # Добавлено
+#        user: "{{ DB_USER }}"  # Добавлено
+#        password: "{{ DB_PASSWORD }}"  # Добавлено
+#      when: inventory_hostname == "db_primary"
+
+    - name: Ensure replication user exists
+      postgresql_user:
+        name: "{{ DB_REPL_USER }}"
+        password: "{{ DB_REPL_PASSWORD }}"
+        role_attr_flags: LOGIN,REPLICATION
+        state: present
+        db: replication_db
+        host: "{{ DB_HOST }}"
+        port: "{{ DB_PORT }}"
+        login_user: "{{ DB_USER }}"   
+        login_password: "{{ DB_PASSWORD }}"  # \u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u043e
+      when: inventory_hostname == "db_primary"
+
+#    - name: Ensure replication user exists
+#      postgresql_user:
+#        name: "{{ DB_REPL_USER }}"
+#        password: "{{ DB_REPL_PASSWORD }}" 
+#        role_attr_flags: LOGIN,REPLICATION
+#        state: present
+#        db: replication_db
+#      when: inventory_hostname == "db_primary"
+
+    - name: Configure recovery.conf
+      template:
+        src: templates/recovery.conf.j2
+        dest: /var/lib/postgresql/13/main/recovery.conf
+      notify: restart postgresql
+      when: inventory_hostname == "db_replica"
+
+  handlers:
+    - name: restart postgresql
+      service: 
+        name: postgresql 
+        state: restarted
+
+- hosts: registry
+  become: yes
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io 
+        state: present
+        update_cache: yes
+    - name: Install Docker Compose 
+      apt:
+        name: docker-compose
+        state: present
+        update_cache: yes
+    - name: Create Docker registry directory
+      file:
+        path: /home/debian/docker-registry			
+        state: directory
+        mode: 0777
+
+    - name: Start Docker registry
+      docker_container:
+        name: registry
+        image: registry:2
+        state: started
+        restart_policy: always
+        published_ports:
+          - "5000:5000"
+        volumes:
+          - /home/debian/docker-registry:/home/debian/docker-registry     
+
+- hosts: bot
+  become: true
+  vars:
+    TOKEN: "7162717177:AAENKN8pRgW2opreeTrELVqSJwWhq-c_8pQ"
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+    - name: Install Docker Compose 
+      apt:
+        name: docker-compose
+        state: present
+        update_cache: yes
+    - name: Install git
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+
+    - name: Clone telegram bot repository
+      git:
+        repo: https://github.com/AvocadoSV/PTSTART-devops.git
+        dest: /opt/telegram_bot    
+
+    - name: Add insecure registry option to Docker Daemon configuration
+      lineinfile:
+        path: /etc/docker/daemon.json
+        line: '{"insecure-registries": ["192.168.64.29:5000"]}'
+        backup: yes
+
+    - name: Reload Docker Service
+      systemd:
+        name: docker
+        state: restarted
+        daemon_reload: yes
+
+    - name: Build bot Docker image
+      docker_image:
+        name: "192.168.64.29:5000/bot_image"
+        build:
+          path: /opt/telegram_bot/bot
+        source: build
+        push: yes
+
+    - name: Build primary database Docker image
+      docker_image:
+        name: "192.168.64.29:5000/db_image"
+        build:
+          path: /opt/telegram_bot/db_primary
+        source: build
+        push: yes
+
+    - name: Build replica database Docker image
+      docker_image:
+        name: "192.168.64.29:5000/db_repl_image"
+        build:
+          path: /opt/telegram_bot/db_replica
+        source: build
+        push: yes
+
+    - name: Copy docker-compose file
+      copy:
+        src: docker-compose.yml
+        dest: /opt/telegram_bot/docker-compose.yml
+        
+    - name: Start Telegram bot stack
+      docker_compose:
+        project_src: /opt/telegram_bot
+        state: present
+      environment:
+        TOKEN: "{{ TOKEN }}"
