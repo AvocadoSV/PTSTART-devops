@@ -43,19 +43,6 @@
         name: psycopg2-binary
         state: present
 
-#    - name: Ensure replication user exists
-#      postgresql_user:
-#        name: "{{ DB_REPL_USER }}"
-#        password: "{{ DB_REPL_PASSWORD }}"
-#        role_attr_flags: LOGIN,REPLICATION
-#        state: present
-#        db: replication_db
-#        host: "{{ DB_HOST }}"  # Добавлено
-#        port: "{{ DB_PORT }}"  # Добавлено
-#        user: "{{ DB_USER }}"  # Добавлено
-#        password: "{{ DB_PASSWORD }}"  # Добавлено
-#      when: inventory_hostname == "db_primary"
-
     - name: Ensure replication user exists
       postgresql_user:
         name: "{{ DB_REPL_USER }}"
@@ -66,17 +53,8 @@
         host: "{{ DB_HOST }}"
         port: "{{ DB_PORT }}"
         login_user: "{{ DB_USER }}"   
-        login_password: "{{ DB_PASSWORD }}"  # \u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u043e
+        login_password: "{{ DB_PASSWORD }}"  
       when: inventory_hostname == "db_primary"
-
-#    - name: Ensure replication user exists
-#      postgresql_user:
-#        name: "{{ DB_REPL_USER }}"
-#        password: "{{ DB_REPL_PASSWORD }}" 
-#        role_attr_flags: LOGIN,REPLICATION
-#        state: present
-#        db: replication_db
-#      when: inventory_hostname == "db_primary"
 
     - name: Configure recovery.conf
       template:
