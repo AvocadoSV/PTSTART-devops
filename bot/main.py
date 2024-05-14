@@ -240,7 +240,7 @@ def get_auth(update: Update, context):
 
 
 def get_critical(update: Update, context):
-    output = execute_ssh_command("journalctl -p err -b -n 5")
+    output = execute_ssh_command("sudo journalctl -p err -b -n 5")
     update.message.reply_text(output)
 
 
