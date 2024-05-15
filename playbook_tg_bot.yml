@@ -43,18 +43,67 @@
         name: psycopg2-binary
         state: present
 
+    - name: Install dotenv Python module
+      pip:
+        name: python-dotenv
+        state: present
+        
+    - name: Create replication_db database if it doesn't exist
+      community.postgresql.postgresql_db:
+        name: replication_db
+        login_user: "{{ DB_USER }}"
+        login_password: "{{ DB_PASSWORD }}"
+      when: inventory_hostname == "db_primary"
+
+    - name: Create the phone_numbers table if it doesn't exist
+      community.postgresql.postgresql_query:
+        db: replication_db
+        login_user: "{{ DB_USER }}"
+        login_password: "{{ DB_PASSWORD }}"
+        query: "CREATE TABLE IF NOT EXISTS phone_numbers (id SERIAL PRIMARY KEY, phone_number VARCHAR(20))"
+      when: inventory_hostname == "db_primary"
+
     - name: Ensure replication user exists
-      postgresql_user:
+      community.postgresql.postgresql_user:
         name: "{{ DB_REPL_USER }}"
         password: "{{ DB_REPL_PASSWORD }}"
         role_attr_flags: LOGIN,REPLICATION
         state: present
         db: replication_db
-        host: "{{ DB_HOST }}"
-        port: "{{ DB_PORT }}"
-        login_user: "{{ DB_USER }}"   
-        login_password: "{{ DB_PASSWORD }}"  
+        login_user: "{{ DB_USER }}"
+        login_password: "{{ DB_PASSWORD }}"
+        connect_params:
+          host: "{{ DB_HOST }}"
+          port: "{{ DB_PORT }}"
       when: inventory_hostname == "db_primary"
+
+    - name: Install pexpect Python module
+      pip:
+        name: pexpect
+        state: present
+
+    - name: Stop PostgreSQL on replica
+      systemd:
+        name: postgresql
+        state: stopped
+
+    - name: Take base backup from master
+      command: pg_basebackup -R -h {{ DB_HOST }} -U {{ DB_REPL_USER }} -D /var/lib/postgresql/13/main -P
+      args:
+        creates: /var/lib/postgresql/13/main/pg_replslot
+
+    - name: Take base backup from master
+      expect:
+        command: pg_basebackup -R -h "{{ DB_HOST }}" -U "{{ DB_REPL_USER }}" -D /var/lib/postgresql/13/main -P
+        responses:
+          Password: "{{ DB_REPL_PASSWORD }}"
+      args:
+        creates: /var/lib/postgresql/13/main/pg_replslot
+
+    - name: Start PostgreSQL on replica
+      systemd:
+        name: postgresql
+        state: started
 
     - name: Configure recovery.conf
       template:
@@ -125,6 +174,17 @@
         repo: https://github.com/AvocadoSV/PTSTART-devops.git
         dest: /opt/telegram_bot    
 
+    - name: Check if daemon.json exists
+      stat:
+        path: /etc/docker/daemon.json
+      register: daemon_json_stat
+
+    - name: Create daemon.json if it doesn't exist
+      file:
+        path: /etc/docker/daemon.json
+        state: touch
+      when: daemon_json_stat.stat.exists == False
+
     - name: Add insecure registry option to Docker Daemon configuration
       lineinfile:
         path: /etc/docker/daemon.json
@@ -136,6 +196,16 @@
         name: docker
         state: restarted
         daemon_reload: yes
+
+    - name: Install dotenv Python module
+      pip:
+        name: python-dotenv
+        state: present
+
+    - name: Create .env file for bot configuration
+      template:
+        src: templates/f.env
+        dest: /opt/telegram_bot/.env
 
     - name: Build bot Docker image
       docker_image:
@@ -160,11 +230,6 @@
           path: /opt/telegram_bot/db_replica
         source: build
         push: yes
-
-    - name: Copy docker-compose file
-      copy:
-        src: docker-compose.yml
-        dest: /opt/telegram_bot/docker-compose.yml
         
     - name: Start Telegram bot stack
       docker_compose:
