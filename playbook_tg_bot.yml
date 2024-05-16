@@ -220,6 +220,12 @@
         src: templates/f.env
         dest: /opt/telegram_bot/.env
 
+# код для копирования файла compose 
+#    - name: Copy docker-compose.yml from control node to bot
+#      template:
+#        src: docker-compose.yml
+#        dest: /opt/telegram_bot/docker-compose.yaml
+
     - name: Build bot Docker image
       docker_image:
         name: "192.168.64.29:5000/bot_image"
