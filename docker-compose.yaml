@@ -6,13 +6,13 @@ services:
     volumes:
       - /var/log/postgresql/postgresql-13-main.log:/var/log/postgresql/postgresql-13-main.log
     depends_on:
-      - db_primary
-      - db_replica
+      - db
+      - db_repl
 
-  db_primary:
+  db:
     image: 192.168.64.29:5000/db_image:latest
 
-  db_replica:
+  db_repl:
     image: 192.168.64.29:5000/db_repl_image:latest
     
   registry:
