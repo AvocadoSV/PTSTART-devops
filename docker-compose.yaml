@@ -1,0 +1,42 @@
+version: "3.3"
+
+services:
+  bot:
+    image: 192.168.64.29:5000/bot_image:latest
+    volumes:
+      - /var/log/postgresql/postgresql-13-main.log:/var/log/postgresql/postgresql-13-main.log
+    depends_on:
+      - db
+      - db_repl
+  db:
+    image: 192.168.64.29:5000/db_image:latest
+  db_repl:
+    image: 192.168.64.29:5000/db_repl_image:latest
+
+#код для локальной сборки (раскомментировать снизу и закомментировать верхний код)
+
+#version: "3.3"
+
+#services:
+#  bot:
+#    build:
+#      context: ./bot
+#    volumes:
+#      - /var/log/postgresql/postgresql-13-main.log:/var/log/postgresql/postgresql-13-main.log
+#    depends_on:
+#      - db
+#      - db_repl
+#    env_file:
+#      - .env
+
+#  db:
+#    build:
+#      context: ./db
+#    env_file:
+#      - .env
+
+#  db_repl:
+#    build:
+#      context: ./db_repl
+#    env_file:
+#      - .env
