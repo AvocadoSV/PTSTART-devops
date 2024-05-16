@@ -21,3 +21,33 @@ services:
       - "5001:5000"
     volumes:
       - /path/to/registry/data:/var/lib/registry
+
+#код для локальной сборки
+
+# version: "3.3"
+
+# services:
+#   bot:
+#     build:
+#       context: ./bot
+#     volumes:
+#       - /var/log/postgresql/postgresql-13-main.log:/var/log/postgresql/postgresql-13-main.log
+#     depends_on:
+#       - db
+#       - db_repl
+#     env_file:
+#       - .env
+
+#   db:
+#     build:
+#       context: ./db
+#     env_file:
+#       - .env
+
+#   db_repl:
+#     build:
+#       context: ./db_repl
+#     env_file:
+#       - .env
+    
+
