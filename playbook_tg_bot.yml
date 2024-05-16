@@ -53,7 +53,7 @@
         name: replication_db
         login_user: "{{ DB_USER }}"
         login_password: "{{ DB_PASSWORD }}"
-      when: inventory_hostname == "db_primary"
+      when: inventory_hostname == "db"
 
     - name: Create the phone_numbers table if it doesn't exist
       community.postgresql.postgresql_query:
@@ -61,7 +61,7 @@
         login_user: "{{ DB_USER }}"
         login_password: "{{ DB_PASSWORD }}"
         query: "CREATE TABLE IF NOT EXISTS phone_numbers (id SERIAL PRIMARY KEY, phone_number VARCHAR(20))"
-      when: inventory_hostname == "db_primary"
+      when: inventory_hostname == "db"
 
 #    - name: Ensure replication user exists
 #      community.postgresql.postgresql_user:
@@ -75,7 +75,7 @@
 #        connect_params:
 #          host: "{{ DB_HOST }}"
 #          port: "{{ DB_PORT }}"
-#      when: inventory_hostname == "db_primary"
+#      when: inventory_hostname == "db"
 
     - name: Ensure replication user exists
       community.postgresql.postgresql_user:
@@ -88,7 +88,7 @@
         login_password: "{{ DB_PASSWORD }}"
         login_host: "{{ DB_HOST }}"
         port: "{{ DB_PORT }}"
-      when: inventory_hostname == "db_primary"
+      when: inventory_hostname == "db"
 
     - name: Install pexpect Python module
       pip:
@@ -123,7 +123,7 @@
         src: templates/recovery.conf.j2
         dest: /var/lib/postgresql/13/main/recovery.conf
       notify: restart postgresql
-      when: inventory_hostname == "db_replica"
+      when: inventory_hostname == "db_repl"
 
   handlers:
     - name: restart postgresql
@@ -232,7 +232,7 @@
       docker_image:
         name: "192.168.64.29:5000/db_image"
         build:
-          path: /opt/telegram_bot/db_primary
+          path: /opt/telegram_bot/db
         source: build
         push: yes
 
@@ -240,7 +240,7 @@
       docker_image:
         name: "192.168.64.29:5000/db_repl_image"
         build:
-          path: /opt/telegram_bot/db_replica
+          path: /opt/telegram_bot/db_repl
         source: build
         push: yes
         
