@@ -1,6 +1,6 @@
 [database]
-db_primary ansible_host=192.168.64.29 ansible_user=debian ansible_ssh_pass=debian ansible_become_pass=debian DB_HOST=192.168.64.29 DB_USER=postgres DB_PASSWORD=1234 DB_PORT=5432 DB_DATABASE=replication_db DB_REPL_USER=repl_user DB_REPL_PASSWORD=1234 DB_REPL_PORT=5432 DB_REPL_HOST=192.168.64.41
-db_replica ansible_host=192.168.64.41 ansible_user=debian ansible_ssh_pass=debian ansible_become_pass=debian DB_REPL_HOST=192.168.64.41 DB_REPL_USER=repl_user DB_REPL_PASSWORD=1234 DB_REPL_PORT=5432 DB_HOST=192.168.64.29 DB_USER=postgres DB_PASSWORD=1234 DB_PORT=5432 DB_DATABASE=replication_db
+db ansible_host=192.168.64.29 ansible_user=debian ansible_ssh_pass=debian ansible_become_pass=debian DB_HOST=192.168.64.29 DB_USER=postgres DB_PASSWORD=1234 DB_PORT=5432 DB_DATABASE=replication_db DB_REPL_USER=repl_user DB_REPL_PASSWORD=1234 DB_REPL_PORT=5432 DB_REPL_HOST=192.168.64.41
+db_repl ansible_host=192.168.64.41 ansible_user=debian ansible_ssh_pass=debian ansible_become_pass=debian DB_REPL_HOST=192.168.64.41 DB_REPL_USER=repl_user DB_REPL_PASSWORD=1234 DB_REPL_PORT=5432 DB_HOST=192.168.64.29 DB_USER=postgres DB_PASSWORD=1234 DB_PORT=5432 DB_DATABASE=replication_db
 
 [bot]
 tg_bot ansible_host=192.168.64.29 ansible_user=debian ansible_ssh_pass=debian
