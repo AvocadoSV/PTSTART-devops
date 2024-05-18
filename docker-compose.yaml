@@ -1,35 +1,40 @@
+#код для локальной сборки
 version: "3.3"
 
 services:
   bot:
-    image: 192.168.64.29:5000/bot_image:latest
+    build:
+      context: ./bot
     volumes:
       - /var/log/postgresql/postgresql-13-main.log:/var/log/postgresql/postgresql-13-main.log
     depends_on:
       - db
       - db_repl
+    env_file:
+      - .env
 
   db:
-    image: 192.168.64.29:5000/db_image:latest
+    build:
+      context: ./db
+    env_file:
+      - .env
 
   db_repl:
-    image: 192.168.64.29:5000/db_repl_image:latest
-    
+    build:
+      context: ./db_repl
+    env_file:
+      - .env
+
   registry:
-    image: registry:2
-    ports:
-      - "5001:5000"
-    volumes:
-      - /path/to/registry/data:/var/lib/registry
-
-#код для локальной сборки
-
+     image: registry:2
+     ports:
+       - "5000:5000"
+    
 # version: "3.3"
 
 # services:
 #   bot:
-#     build:
-#       context: ./bot
+#     image: 192.168.64.29:5000/bot_image:latest
 #     volumes:
 #       - /var/log/postgresql/postgresql-13-main.log:/var/log/postgresql/postgresql-13-main.log
 #     depends_on:
@@ -39,15 +44,12 @@ services:
 #       - .env
 
 #   db:
-#     build:
-#       context: ./db
-#     env_file:
-#       - .env
+#     image: 192.168.64.29:5000/db_image:latest
 
 #   db_repl:
-#     build:
-#       context: ./db_repl
-#     env_file:
-#       - .env
+#     image: 192.168.64.29:5000/db_repl_image:latest
     
-
+#   registry:
+#     image: registry:2
+#     ports:
+#       - "5000:5000"
