@@ -240,7 +240,7 @@ def get_auth(update: Update, context):
 
 
 def get_critical(update: Update, context):
-    output = execute_ssh_command("sudo journalctl -p err -b -n 5")
+    output = execute_ssh_command("journalctl -p err -b -n 5 -q")
     update.message.reply_text(output)
 
 
@@ -268,8 +268,8 @@ def get_replication_logs(update: Update, context: CallbackContext):
     # Параметры SSH-соединения
     SSH_HOST = os.getenv("RM_HOST")
     SSH_PORT = os.getenv("RM_PORT")
-    SSH_USERNAME = os.getenv("RM_USER")
-    SSH_PASSWORD = os.getenv("RM_PASSWORD")
+    SSH_USERNAME = os.getenv("DB_USER")
+    SSH_PASSWORD = os.getenv("DB_PASSWORD")
 
     log_file_path = "/var/log/postgresql/postgresql-13-main.log"
 
